@@ -77,18 +77,19 @@ export default class Tournament<EntrantDataType> {
     }))
 
     //initialize a queue of nodes 
-    const nodeQueue: NodeType[] = [...this.nodes]
+    let nodeQueue: NodeType[] = [...this.nodes]
 
     let level:number = 0
     while(nodeQueue.length > 1) { //while there are more than one nodes in the queue, ie we should make a new level
       //if the initial number of entrants is not an exact power of the base
       //have the entrants face off against each other until we get to an exact power of the base
       const powerRemainder = nodeQueue.length - powerRoundDown(nodeQueue.length, this.base)
+      const isPowerRemainder = powerRemainder > 0 //if there is a power remainder (ie the number of tournament entrants is uneven)
       
       //the number of new nodes to make in this level
-      const numNewNodes = powerRemainder || (nodeQueue.length / this.base)
-      
+      const numNewNodes = isPowerRemainder ? powerRemainder : (nodeQueue.length / this.base)
       let row = 0
+      const tmpNewNodeQueue: NodeType[] = []
       for(let i=0; i<numNewNodes; ++i) { //make all the new nodes
         const newNode = { //create a new node
           childrenIds: [], //to be populated later
@@ -98,8 +99,10 @@ export default class Tournament<EntrantDataType> {
           parentId: null, //to be set later
           row: i, //row in the level
         }
+
         for(let j=0; j<this.base; ++j) { //assign all the children to the new node
           const node = nodeQueue.shift() //shift the child node out of the queue
+          node.level = level //assign the level
           node.row = row //assign the row
           row++ //increment to the next row
 
@@ -108,8 +111,16 @@ export default class Tournament<EntrantDataType> {
         }
   
         this.nodes.push(newNode) //push the new node into
-        nodeQueue.push(newNode) //add the new node to the queue
+
+        if(isPowerRemainder) { //if the the number of tournament entrants is uneven
+          //we want to add the new nodes in front of what will be the remaining nodes in the queue
+          tmpNewNodeQueue.push(newNode)
+        }
+        else {
+          nodeQueue.push(newNode) //add the new node to the queue
+        }
       }
+      nodeQueue = tmpNewNodeQueue.concat(nodeQueue)
 
       level++
     }
@@ -189,6 +200,6 @@ function throwIfNotTrue (input: boolean | Error) {
  * @returns     return the next lower power of the base
  */
 function powerRoundDown(value: number, base: number) {
-  const power = Math.log(value) / Math.log(base)
+  const power = Math.floor(Math.log(value) / Math.log(base))
   return Math.pow(base, power)
 }
