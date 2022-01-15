@@ -4,7 +4,7 @@ type EntrantType<EntrantDataType> = {
 }
 
 type NodeType = {
-  childrenIds: number[] | null,
+  childrenIds: {[nodeId: string]: boolean} | null,
   entrantId: number | null, //which entrant is in this tournament position (could be empty)
   id: number, //also the index in the array
   level: number, //tournament level, index starting at 0
@@ -92,7 +92,7 @@ export default class Tournament<EntrantDataType> {
       const tmpNewNodeQueue: NodeType[] = []
       for(let i=0; i<numNewNodes; ++i) { //make all the new nodes
         const newNode = { //create a new node
-          childrenIds: [], //to be populated later
+          childrenIds: {}, //to be populated later
           entrantId: null, //to be populated by the user later
           id: this.nodes.length, //id of the node
           level: level + 1,
@@ -106,7 +106,7 @@ export default class Tournament<EntrantDataType> {
           node.row = row //assign the row
           row++ //increment to the next row
 
-          newNode.childrenIds.push(node.id) //mark this node as a child of the newNode
+          newNode.childrenIds[node.id] = true //mark this node as a child of the newNode
           this.nodes[node.id].parentId = newNode.id //mark this new node as the parent
         }
   
@@ -140,10 +140,7 @@ export default class Tournament<EntrantDataType> {
 
   /***************** Selecting and Deselecting Winners /*****************/
 
-  canSelectNodeWinner = (nodeId: number):boolean|Error => {
-    const node = this.nodes[nodeId]
-    const parent = this.nodes[node.parentId]
-
+  canSelectNodeWinner = (node: NodeType, parent: NodeType):boolean|Error => {
     if(parent === undefined) { //if the parent does not exist
       return new Error("The selected node does not have a parent")
     }
@@ -158,24 +155,28 @@ export default class Tournament<EntrantDataType> {
     const node = this.nodes[nodeId]
     const parent = this.nodes[node.parentId]
 
-    throwIfNotTrue(this.canSelectNodeWinner(nodeId))
+    throwIfNotTrue(this.canSelectNodeWinner(node, parent))
 
     parent.entrantId = node.entrantId //advance the entrant to the next tournament level
   }
 
-  canDeselectNodeWinner = (nodeId: number):boolean|Error => {
-    const node = this.nodes[nodeId]
-
+  canDeselectNodeWinner = (node: NodeType, parent: NodeType):boolean|Error => {
+    if(typeof parent?.entrantId === "number") { //if the parent has a winning entrant
+      return new Error("You must first deselect the node winner for the parent")
+    }
     if(node.entrantId === null) { //if an entrant was not yet selected to be the winner at this node
       return new Error("The selected node does not have an entrant")
     }
+    //can only deselect node if parent doesn't already have an entrant
+
     return true
   }
 
   deselectNodeWinner = (nodeId: number) => {
     const node = this.nodes[nodeId]
+    const parent = this.nodes[node.parentId]
 
-    throwIfNotTrue(this.canDeselectNodeWinner(nodeId))
+    throwIfNotTrue(this.canDeselectNodeWinner(node, parent))
 
     node.entrantId = null //unset the winning entrant
   }
@@ -201,5 +202,18 @@ function throwIfNotTrue (input: boolean | Error) {
  */
 function powerRoundDown(value: number, base: number) {
   const power = Math.floor(Math.log(value) / Math.log(base))
+  return Math.pow(base, power)
+}
+
+/**
+ * given a value and a base, return the next higher power of the base
+ * ie, value of 7, power 2, returns 8
+ * value of 10, power of 2, returns 16
+ * @param value 
+ * @param base  
+ * @returns     return the next higher power of the base
+ */
+ function powerRoundUp(value: number, base: number) {
+  const power = Math.ceil(Math.log(value) / Math.log(base))
   return Math.pow(base, power)
 }
