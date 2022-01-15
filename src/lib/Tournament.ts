@@ -3,10 +3,11 @@ type EntrantType<EntrantDataType> = {
   id: number, //also the index in the array
 }
 
-type NodeType = {
+export type NodeType = {
   childrenIds: {[nodeId: string]: boolean} | null,
   entrantId: number | null, //which entrant is in this tournament position (could be empty)
   id: number, //also the index in the array
+  isOriginalEntrant: boolean, //whether this is a bottom-level entrant
   level: number, //tournament level, index starting at 0
   parentId: number | null,
   row: number, //row in the level, index starting at 0
@@ -72,6 +73,7 @@ export default class Tournament<EntrantDataType> {
       childrenIds: null,
       entrantId: e.id, //link the entrant id
       id: i, //id of the node
+      isOriginalEntrant: true,
       level: 0,
       parentId: null, //to be set later
       row: i, //row in the level
@@ -92,10 +94,11 @@ export default class Tournament<EntrantDataType> {
       let row = 0
       const tmpNewNodeQueue: NodeType[] = []
       for(let i=0; i<numNewNodes; ++i) { //make all the new nodes
-        const newNode = { //create a new node
+        const newNode: NodeType = { //create a new node
           childrenIds: {}, //to be populated later
           entrantId: null, //to be populated by the user later
           id: this.nodes.length, //id of the node
+          isOriginalEntrant: false,
           level: level + 1,
           parentId: null, //to be set later
           row: i, //row in the level
@@ -142,12 +145,20 @@ export default class Tournament<EntrantDataType> {
 
   /***************** Selecting and Deselecting Winners /*****************/
 
-  canSelectNodeWinner = (node: NodeType, parent: NodeType):boolean|Error => {
+  canSelectNodeWinner = (node: NodeType):boolean|Error => {
+    const parent = this.nodes[node.parentId]
     if(parent === undefined) { //if the parent does not exist
       return new Error("The selected node does not have a parent")
     }
     if(node.entrantId === null) { //if an entrant was not yet selected to be the winner at this node
       return new Error("The selected node does not have an entrant")
+    }
+    if(
+      Object.keys(parent.childrenIds).some(
+        nodeId => typeof this.nodes[parseInt(nodeId)]?.entrantId !== "number"
+      )
+    ) {
+      return new Error("The selected node's parent must have children with entrants")
     }
     return true
   }
@@ -157,19 +168,22 @@ export default class Tournament<EntrantDataType> {
     const node = this.nodes[nodeId]
     const parent = this.nodes[node.parentId]
 
-    throwIfNotTrue(this.canSelectNodeWinner(node, parent))
+    throwIfNotTrue(this.canSelectNodeWinner(node))
 
     parent.entrantId = node.entrantId //advance the entrant to the next tournament level
   }
 
-  canDeselectNodeWinner = (node: NodeType, parent: NodeType):boolean|Error => {
+  canDeselectNodeWinner = (node: NodeType):boolean|Error => {
+    const parent = this.nodes[node.parentId]
     if(typeof parent?.entrantId === "number") { //if the parent has a winning entrant
       return new Error("You must first deselect the node winner for the parent")
     }
     if(node.entrantId === null) { //if an entrant was not yet selected to be the winner at this node
       return new Error("The selected node does not have an entrant")
     }
-    //can only deselect node if parent doesn't already have an entrant
+    if(node.isOriginalEntrant) {
+      return new Error("The selected node is an original entrant and cannot be deselected")
+    }
 
     return true
   }
@@ -178,7 +192,7 @@ export default class Tournament<EntrantDataType> {
     const node = this.nodes[nodeId]
     const parent = this.nodes[node.parentId]
 
-    throwIfNotTrue(this.canDeselectNodeWinner(node, parent))
+    throwIfNotTrue(this.canDeselectNodeWinner(node))
 
     node.entrantId = null //unset the winning entrant
   }

@@ -4,8 +4,8 @@
 
   import Blanchor from '$lib/Blanchor.svelte';
   import type Tournament from '$lib/Tournament'
-  import { powerRoundUp } from '$lib/Tournament';
-  // import { faFilePdf } from '@fortawesome/free-solid-svg-icons'
+  import { NodeType, powerRoundUp } from '$lib/Tournament';
+  import { faArrowRight, faTimes } from '@fortawesome/free-solid-svg-icons'
 
   type NodeDimensionsType = {
     t: number, //top margin
@@ -38,39 +38,71 @@
     const top = node.row * levelHeightDivision + nodeDims.t + levelHeightDivision/2 - totalNodeHeight/2
 
     return {
+      canDeselectNodeWinner: tournament.canDeselectNodeWinner(node)===true,
+      canSelectNodeWinner: tournament.canSelectNodeWinner(node)===true,
       left,
       node,
-      rect: {
-        x: left,
-        y: top,
-        height: nodeDims.h,
-        width: nodeDims.w,
-      },
-      text: {
-        x: left + nodeDims.w / 2,
-        y: top + nodeDims.h / 2,
-      },
       top,
     }
   })
+
+  function deselectNodeWinner(node: NodeType) {
+    if(tournament.canDeselectNodeWinner(node)) {
+      tournament.deselectNodeWinner(node.id)
+      tournament = tournament
+    }
+  }
+  function selectNodeWinner(node: NodeType) {
+    if(tournament.canSelectNodeWinner(node)) {
+      tournament.selectNodeWinner(node.id)
+      tournament = tournament
+    }
+  }
 </script>
 
 <div class="tournament" bind:clientHeight={height} bind:clientWidth={width}>
   <svg {height} {width}>
     <g>
-      {#each renderNodeData as node}
+      {#each renderNodeData as n}
         <g 
-          class="node"
-          on:click={() => {
-            tournament.selectNodeWinner(node.node.id)
-            tournament = tournament
-          }}
+          class={
+            "node"
+            + (n.canSelectNodeWinner?" can-select-winner":"")
+            + (n.canDeselectNodeWinner?" can-deselect-winner":"")
+          }
+
+          transform={`translate(${n.left},${n.top})`}
         >
           <rect
-            {...node.rect}
             fill="#eee"
+            height={nodeDims.h}
+            width={nodeDims.w}
+            x={0}
+            y={0}
           />
-          <text {...node.text} text-anchor="middle" dy="0.35em">{tournament.entrants[node.node.entrantId]?.data || ""}</text>
+          <text x={nodeDims.w/2} y={nodeDims.h/2} text-anchor="middle" dy="0.35em">
+            {tournament.entrants[n.node.entrantId]?.data || ""}
+          </text>
+
+          {#if n.canDeselectNodeWinner}
+            <foreignObject x={- 15} y={nodeDims.h/2 - 15} height="30" width="30">
+              <div class="tournament-icon-container">
+                <button class="tournament-icon" on:click={() => deselectNodeWinner(n.node)}>
+                  <Fa icon={faTimes}/>
+                </button>
+              </div>
+            </foreignObject>
+          {/if}
+
+          {#if n.canSelectNodeWinner}
+            <foreignObject x={nodeDims.w - 15} y={nodeDims.h/2 - 15} height="30" width="30">
+              <div class="tournament-icon-container">
+                <button class="tournament-icon" on:click={() => selectNodeWinner(n.node)}>
+                  <Fa icon={faArrowRight}/>
+                </button>
+              </div>
+            </foreignObject>
+          {/if}
         </g>
       {/each}
     </g>
@@ -87,7 +119,23 @@
     background-color: pink;
   }
 
-  .node {
-    cursor: pointer;
+  .tournament-icon-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .tournament-icon {
+    border: 2px solid #999;
+    border-radius: 50%;
+    background-color: white;
+    width: 1.5em;
+    height: 1.5em;
+    font-size: 1em;
+    margin: 0;
+    padding: 0;
+    text-align: center;
   }
 </style>

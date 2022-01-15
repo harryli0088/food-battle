@@ -257,6 +257,13 @@ test("invalid selectNodeWinner", () => {
   expect(() => {
     tourn.selectNodeWinner(6) //invalid
   }).toThrowError("The selected node does not have a parent")
+
+
+  tourn.selectNodeWinner(0) //apple
+
+  expect(() => {
+    tourn.selectNodeWinner(4) //invalid
+  }).toThrowError("The selected node's parent must have children with entrants")
 })
 
 
