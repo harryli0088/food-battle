@@ -15,6 +15,7 @@ type NodeType = {
 export default class Tournament<EntrantDataType> {
   base: number //how many entrants face off at a time
   entrants: EntrantType<EntrantDataType>[]
+  levels: number = 0
   nodes: NodeType[]
   nodeMap: { //maps the level and row of the tournament to respective node id
     [key: string]: number
@@ -125,6 +126,7 @@ export default class Tournament<EntrantDataType> {
       level++
     }
 
+    this.levels = level + 1
     this.nodeMap = {} //reset the node map
     this.nodes.forEach(n => {
       this.nodeMap[this.getNodeMapKeyFromNode(n)] = n.id
@@ -213,7 +215,7 @@ function powerRoundDown(value: number, base: number) {
  * @param base  
  * @returns     return the next higher power of the base
  */
- function powerRoundUp(value: number, base: number) {
+export function powerRoundUp(value: number, base: number) {
   const power = Math.ceil(Math.log(value) / Math.log(base))
   return Math.pow(base, power)
 }

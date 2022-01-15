@@ -2,12 +2,18 @@
   import Fa from 'svelte-fa'
   import { faGithub } from '@fortawesome/free-brands-svg-icons'
 
-  import Blanchor from '$lib/Blanchor.svelte';
+  import Blanchor from '$lib/Blanchor.svelte'
+  import Tournament from '$lib/Tournament'
+  import TournamentComponent from '$lib/Tournament.svelte'
+  import shuffle from '$lib/shuffle'
   // import { faFilePdf } from '@fortawesome/free-solid-svg-icons'
+  
+  const entrants = shuffle(["Pizza", "Pasta", "Sushi", "Viet", "Sando", "Mexican", "Burgers", "Chinese"])
+  const tourn = new Tournament(entrants)
 </script>
 
 <main>
-	<header>
+	<!-- <header>
     <div>
       <h1>Svelte Kit Template</h1>
       <br/>
@@ -17,22 +23,15 @@
         </Blanchor>
       </div>
     </div>
-  </header>
+  </header> -->
 
-  <section>
-    <p>This is my own Svelte Kit template! It includes:</p>
-
-    <ul>
-      <li>Fontawesome icons for Svelte</li>
-      <li>GitHub pages set up</li>
-      <li>Container styling</li>
-      <li>Some header/section/footer styling</li>
-    </ul>
-  </section>
+  <div id="tournament-container">
+    <TournamentComponent tournament={tourn}/>
+  </div>
 </main>
 
 <style>
-	header {
+	/* header {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -46,5 +45,13 @@
 		header {
 			height: 50vh;
 		}
-	}
+	} */
+
+  #tournament-container {
+    height: 100vh;
+    background-color: #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 </style>

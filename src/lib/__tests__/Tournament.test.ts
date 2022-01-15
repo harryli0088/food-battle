@@ -4,6 +4,8 @@ import Tournament from "../Tournament";
 test("can make a Tournament", () => {
   const tourn = new Tournament<string>(["apple", "banana", "cherry", "dragon fruit"])
 
+  expect(tourn.levels).toEqual(3)
+
   expect(tourn.entrants).toEqual([
     {data: "apple", id: 0},
     {data: "banana", id: 1},
@@ -34,6 +36,8 @@ test("can make a Tournament", () => {
 
 test("can create a tournament with uneven entrants, 5 entrants, base 2", () => {
   const tourn = new Tournament<string>(["apple", "banana", "cherry", "dragon fruit", "elderberry"])
+
+  expect(tourn.levels).toEqual(4)
 
   expect(tourn.entrants).toEqual([
     {data: "apple", id: 0},
@@ -71,6 +75,8 @@ test("can create a tournament with uneven entrants, 5 entrants, base 2", () => {
 
 test("7 entrants, base 2", () => {
   const tourn = new Tournament<string>(["apple", "banana", "cherry", "dragon fruit", "elderberry", "fig", "grape"])
+
+  expect(tourn.levels).toEqual(4)
 
   expect(tourn.entrants).toEqual([
     {data: "apple", id: 0},
@@ -120,6 +126,8 @@ test("add entrant", () => { //(ie, make tourn with even entrants, then add more)
   const tourn = new Tournament<string>(["apple", "banana", "cherry", "dragon fruit"])
   tourn.addEntrant("elderberry")
 
+  expect(tourn.levels).toEqual(4)
+
   expect(tourn.entrants).toEqual([
     {data: "apple", id: 0},
     {data: "banana", id: 1},
@@ -157,6 +165,8 @@ test("add entrant", () => { //(ie, make tourn with even entrants, then add more)
 test("remove entrant", () => {
   const tourn = new Tournament<string>(["apple", "banana", "cherry", "dragon fruit", "elderberry"])
   tourn.removeEntrant(4)
+  
+  expect(tourn.levels).toEqual(3)
 
   expect(tourn.entrants).toEqual([
     {data: "apple", id: 0},
@@ -310,6 +320,8 @@ test("tourn with different base, 9 entrants, base 3", () => {
     ["apple", "banana", "cherry", "dragon fruit", "elderberry", "fig", "grape", "honeydew", "ichigo"],
     3
   )
+
+  expect(tourn.levels).toEqual(3)
 
   expect(tourn.entrants).toEqual([
     {data: "apple", id: 0},
