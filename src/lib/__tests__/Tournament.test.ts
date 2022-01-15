@@ -1,7 +1,7 @@
 import Tournament from "../Tournament";
 
 
-test("Can make a Tournament", () => {
+test("can make a Tournament", () => {
   const tourn = new Tournament<string>(["apple", "banana", "cherry", "dragon fruit"])
 
   expect(tourn.entrants).toEqual([
@@ -20,4 +20,14 @@ test("Can make a Tournament", () => {
     { childrenIds: [2,3], entrantId: null, id: 5, level: 1, parentId: 6, row: 1 },
     { childrenIds: [4,5], entrantId: null, id: 6, level: 2, parentId: null, row: 0 },
   ])
+
+  expect(tourn.nodeMap).toEqual({
+    "0-0": 0,
+    "0-1": 1,
+    "0-2": 2,
+    "0-3": 3,
+    "1-0": 4,
+    "1-1": 5,
+    "2-0": 6,
+  })
 });

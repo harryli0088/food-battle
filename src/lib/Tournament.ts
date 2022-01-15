@@ -13,8 +13,8 @@ type NodeType = {
 }
 
 export default class Tournament<EntrantDataType> {
+  base: number //how many entrants face off at a time
   entrants: EntrantType<EntrantDataType>[]
-  logBase: number //how many entrants face off at a time
   nodes: NodeType[]
   nodeMap: { //maps the level and row of the tournament to respective node id
     [key: string]: number
@@ -22,16 +22,16 @@ export default class Tournament<EntrantDataType> {
 
   constructor(
     entrantsData: EntrantDataType[],
-    logBase: number=2
+    base: number=2
   ) {
     if(entrantsData.length === 0) {
       throw new Error("No entrants data")
     }
-    if(logBase < 2) {
+    if(base < 2) {
       throw new Error("Log Base must be 2 or greater")
     }
 
-    this.logBase = logBase
+    this.base = base
     this.makeEntrants(entrantsData)
     this.rebuildTournament() //rebuild tournament
   }
@@ -67,55 +67,51 @@ export default class Tournament<EntrantDataType> {
 
 
   rebuildTournament = () => {
-    //get the maximum number of tournament levels (including the final victor)
-    //log_a(x) = log(x) / log(a)
-    const maxLevels = Math.ceil(Math.log(this.entrants.length) / Math.log(this.logBase)) + 1
-
-    //build the first layer of the tournament
-    let level = 0
     this.nodes = this.entrants.map((e,i) => ({
       childrenIds: null,
-      level,
       entrantId: e.id, //link the entrant id
       id: i, //id of the node
+      level: 0,
       parentId: null, //to be set later
       row: i, //row in the level
     }))
 
-    let startNodeId = 0 //this is the first node id of the last level
-    while(++level < maxLevels) { //move to the next level and check if we still have remaining levels
-      let newNode: NodeType | null = null
-      let faceOffCount = 0 //track how many nodes are facing off
-      let nodeId = startNodeId //get the node id to start at
+    //initialize a queue of nodes 
+    const nodeQueue: NodeType[] = [...this.nodes]
+
+    let level:number = 0
+    while(nodeQueue.length > 1) { //while there are more than one nodes in the queue, ie we should make a new level
+      //if the initial number of entrants is not an exact power of the base
+      //have the entrants face off against each other until we get to an exact power of the base
+      const powerRemainder = nodeQueue.length - powerRoundDown(nodeQueue.length, this.base)
+      
+      //the number of new nodes to make in this level
+      const numNewNodes = powerRemainder || (nodeQueue.length / this.base)
+      
       let row = 0
-      startNodeId = this.nodes.length //move to the next anticipated level's starting node id
-
-      for(nodeId; nodeId<startNodeId; ++nodeId) { //loop through all the nodes in the previous level
-        faceOffCount++ //increment the face off count
-
-        if(newNode === null) { //if we are facing off between new entrants
-          newNode = {
-            childrenIds: [], //to be populated later
-            level,
-            entrantId: null, //to be populated by the user later
-            id: this.nodes.length, //id of the node
-            parentId: null, //to be set later
-            row, //row in the level
-          }
-
-          row++ //increment the row for the next node
+      for(let i=0; i<numNewNodes; ++i) { //make all the new nodes
+        const newNode = { //create a new node
+          childrenIds: [], //to be populated later
+          entrantId: null, //to be populated by the user later
+          id: this.nodes.length, //id of the node
+          level: level + 1,
+          parentId: null, //to be set later
+          row: i, //row in the level
         }
-        //at this point, newNode should never be null
-        newNode.childrenIds.push(nodeId) //mark this node as a child of the newNode
-        this.nodes[nodeId].parentId = newNode.id //mark this new node as the parent
+        for(let j=0; j<this.base; ++j) { //assign all the children to the new node
+          const node = nodeQueue.shift() //shift the child node out of the queue
+          node.row = row //assign the row
+          row++ //increment to the next row
 
-        if(faceOffCount >= this.logBase) { //if we have reached the maximum number of entrants facing off
-          this.nodes.push(newNode) //push the new node
-
-          faceOffCount = 0 //reset the face off count
-          newNode = null //reset the new node
+          newNode.childrenIds.push(node.id) //mark this node as a child of the newNode
+          this.nodes[node.id].parentId = newNode.id //mark this new node as the parent
         }
+  
+        this.nodes.push(newNode) //push the new node into
+        nodeQueue.push(newNode) //add the new node to the queue
       }
+
+      level++
     }
 
     this.nodeMap = {} //reset the node map
@@ -174,9 +170,25 @@ export default class Tournament<EntrantDataType> {
   }
 }
 
-
-function throwIfNotTrue (result: boolean | Error) {
-  if(result !== true) {
-    throw result
+/**
+ * if the input is not exactly true, throw the input, else do nothing
+ * @param input 
+ */
+function throwIfNotTrue (input: boolean | Error) {
+  if(input !== true) {
+    throw input
   }
+}
+
+/**
+ * given a value and a base, return the next lower power of the base
+ * ie, value of 7, power 2, returns 4
+ * value of 10, power of 2, returns 8
+ * @param value 
+ * @param base  
+ * @returns     return the next lower power of the base
+ */
+function powerRoundDown(value: number, base: number) {
+  const power = Math.log(value) / Math.log(base)
+  return Math.pow(base, power)
 }
