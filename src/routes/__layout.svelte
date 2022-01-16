@@ -9,7 +9,7 @@ import Blanchor from '$lib/Blanchor.svelte';
 </main>
 
 <footer>
-  <p>Inspired by the <Blanchor href="https://stateofjs.com/">State of JS</Blanchor> survey</p>
+  <p>Tournament UI inspired by the <Blanchor href="https://stateofjs.com/">State of JS</Blanchor> survey</p>
   <p>Built using <Blanchor href="https://kit.svelte.dev/">Svelte Kit</Blanchor> and <Blanchor href="https://www.typescriptlang.org/">TypeScript</Blanchor></p>
   <p>Github Repo: <Blanchor href="https://github.com/harryli0088/food-tournament">https://github.com/harryli0088/food-tournament</Blanchor></p>
   <p>Icons provided by Font Awesome: <Blanchor href="https://fontawesome.com/license">https://fontawesome.com/license</Blanchor></p>

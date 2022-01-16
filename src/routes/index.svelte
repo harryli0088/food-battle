@@ -31,31 +31,8 @@
     </div>
   </header> -->
 
-  <div id="tournament-container">
-    <TournamentComponent tournament={tourn}/>
-  </div>
+  <TournamentComponent tournament={tourn}/>
 </main>
 
 <style>
-	/* header {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		overflow: hidden;
-		background-color: #17202A;
-		color: white;
-    text-align: center;
-    height: 70vh;
-	}
-  @media only screen and (min-width: 600px) {
-		header {
-			height: 50vh;
-		}
-	} */
-
-  #tournament-container {
-    /* height: 100vh; */
-    background-color: #ddd;
-    /* overflow: auto; */
-  }
 </style>

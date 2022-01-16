@@ -5,8 +5,9 @@
   import Blanchor from '$lib/Blanchor.svelte';
   import type Tournament from '$lib/Tournament'
   import { NodeType, powerRoundUp } from '$lib/Tournament';
-  import { faArrowRight, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { saveEntrants } from './localStorage';
+  import { faTimes } from '@fortawesome/free-solid-svg-icons'
+  import { saveEntrants } from './localStorage';
+  import { onMount } from 'svelte';
 
   type NodeDimensionsType = {
     t: number, //top margin
@@ -21,6 +22,21 @@ import { saveEntrants } from './localStorage';
   export let nodeDims: NodeDimensionsType = {t: 10, b: 10, l: 30, r: 5, h: 50, w: 100}
 
   let addEntrant:string
+  let emoji:string = "🍕"
+
+  const emojis:string[] = ["🍕","🍝","🍣","🍜","🥪","🌯","🍔","🥡"]
+  // onMount(() => {
+  //   setInterval(() => {
+  //     emojis.push(emojis.shift())
+  //     emoji = emojis[0]
+  //   }, 3000)
+  // })
+  function onClickNode(node: NodeType) {
+    const candidateEmoji = tournament.entrants[node.entrantId]?.data.split(" ")[0]
+    if(emojis.includes(candidateEmoji)) {
+      emoji = candidateEmoji
+    }
+  }
 
   $: totalNodeWidth = nodeDims.l + nodeDims.r + nodeDims.w //horizontal space that one node takes up, ie level width
   $: totalNodeHeight = nodeDims.t + nodeDims.b + nodeDims.h //vertical space that one node takes up
@@ -50,15 +66,13 @@ import { saveEntrants } from './localStorage';
       winner: winnerDecided && parent.entrantId === node.entrantId,
     }
   })
-  
-  $: console.log("renderNodeData",renderNodeData)
 
-  function deselectNodeWinner(node: NodeType) {
-    if(tournament.canDeselectNodeWinner(node)) {
-      tournament.deselectNodeWinner(node.id)
-      tournament = tournament
-    }
-  }
+  // function deselectNodeWinner(node: NodeType) {
+  //   if(tournament.canDeselectNodeWinner(node)) {
+  //     tournament.deselectNodeWinner(node.id)
+  //     tournament = tournament
+  //   }
+  // }
   function selectNodeWinner(node: NodeType) {
     if(tournament.canSelectNodeWinner(node)) {
       tournament.selectNodeWinner(node.id)
@@ -84,100 +98,110 @@ import { saveEntrants } from './localStorage';
   }
 </script>
 
+<svelte:head>
+	<title>{emoji} Food Battle {emoji}</title>
+</svelte:head>
+
 <div class="tournament">
   <div>
-    <h1>Food Tournament!</h1>
-    <p>Decide what to eat, one match at a time</p>
+    <h1>{emoji} Food Battle {emoji}</h1>
+    <p>Decide what to eat, one match at a time!</p>
   </div>
 
   <br/><br/>
 
-  <svg height={containerHeight} width={containerWidth}>
-    <g>
-      {#each renderNodeData as n}
-        {#if n.node.childrenIds}
-          {#each Object.keys(n.node.childrenIds).map(id => renderNodeData[id]) as childNodeData}
-            <path 
-              class={
-                "link"
-                + (childNodeData.winner ? " winner-link" : "")
-                + (childNodeData.loser ? " loser-link" : "")
-              }
-              d={`M${n.left},${n.top+halfNodeHeight} ${childNodeData.left + nodeDims.w},${childNodeData.top+halfNodeHeight}Z`}
-              stroke="#000"
-              stroke-width="2"
-            />
-          {/each}
-        {/if}
-      {/each}
-    </g>
-    <g>
-      {#each renderNodeData as n}
-        <g transform={`translate(${n.left},${n.top})`}>
-          {#if n.node.isOriginalEntrant}
-            <foreignObject x={- 30} y={halfNodeHeight - 15} height="30" width="30">
-              <div class="tournament-icon-container">
-                <button class="tournament-icon" on:click={() => removeEntrant(n.node)}>
-                  <Fa icon={faTimes}/>
-                </button>
-              </div>
-            </foreignObject>
+  <div class="svg-container">
+    <svg height={containerHeight} width={containerWidth}>
+      <g>
+        {#each renderNodeData as n}
+          {#if n.node.childrenIds}
+            {#each Object.keys(n.node.childrenIds).map(id => renderNodeData[id]) as childNodeData}
+              <path 
+                class={
+                  "link"
+                  + (childNodeData.winner ? " winner-link" : "")
+                  + (childNodeData.loser ? " loser-link" : "")
+                }
+                d={`M${n.left},${n.top+halfNodeHeight} ${childNodeData.left + nodeDims.w},${childNodeData.top+halfNodeHeight}Z`}
+                stroke="#000"
+                stroke-width="2"
+              />
+            {/each}
           {/if}
-
-          <!-- {#if n.canDeselectNodeWinner}
-            <foreignObject x={- 15} y={halfNodeHeight - 15} height="30" width="30">
-              <div class="tournament-icon-container">
-                <button class="tournament-icon" on:click={() => deselectNodeWinner(n.node)}>
-                  <Fa icon={faTimes}/>
-                </button>
-              </div>
-            </foreignObject>
-          {/if} -->
-
-          <!-- {#if n.canSelectNodeWinner}
-            <foreignObject x={nodeDims.w - 15} y={halfNodeHeight - 15} height="30" width="30">
-              <div class="tournament-icon-container">
-                <button class="tournament-icon" on:click={() => selectNodeWinner(n.node)}>
-                  <Fa icon={faArrowRight}/>
-                </button>
-              </div>
-            </foreignObject>
-          {/if} -->
-        </g>
-
-        <g 
-          class={
-            "node"
-            + (n.canSelectNodeWinner ? " can-select-winner" : "")
-            + (n.loser ? " loser-node" : "")
-            + (typeof n.node.entrantId === "number" ? " has-entrant" : " no-entrant")
-          }
-
-          transform={`translate(${n.left},${n.top})`}
-        >
-          <g transform={`translate(${halfNodeWidth},${halfNodeHeight})`}>
-            <rect
-              fill="#eee"
-              height={nodeDims.h}
-              on:click={() => selectNodeWinner(n.node)}
-              width={nodeDims.w}
-              x={-halfNodeWidth}
-              y={-halfNodeHeight}
-            />
+        {/each}
+      </g>
+      <g>
+        {#each renderNodeData as n}
+          <g transform={`translate(${n.left},${n.top})`}>
+            {#if n.node.isOriginalEntrant}
+              <foreignObject x={- 30} y={halfNodeHeight - 15} height="30" width="30">
+                <div class="tournament-icon-container">
+                  <button class="tournament-icon" on:click={() => removeEntrant(n.node)}>
+                    <Fa icon={faTimes}/>
+                  </button>
+                </div>
+              </foreignObject>
+            {/if}
+  
+            <!-- {#if n.canDeselectNodeWinner}
+              <foreignObject x={- 15} y={halfNodeHeight - 15} height="30" width="30">
+                <div class="tournament-icon-container">
+                  <button class="tournament-icon" on:click={() => deselectNodeWinner(n.node)}>
+                    <Fa icon={faTimes}/>
+                  </button>
+                </div>
+              </foreignObject>
+            {/if} -->
+  
+            <!-- {#if n.canSelectNodeWinner}
+              <foreignObject x={nodeDims.w - 15} y={halfNodeHeight - 15} height="30" width="30">
+                <div class="tournament-icon-container">
+                  <button class="tournament-icon" on:click={() => selectNodeWinner(n.node)}>
+                    <Fa icon={faArrowRight}/>
+                  </button>
+                </div>
+              </foreignObject>
+            {/if} -->
           </g>
-          <text
-            dy="0.35em"
-            on:click={() => selectNodeWinner(n.node)}
-            text-anchor="middle"
-            x={halfNodeWidth}
-            y={halfNodeHeight}
+  
+          <g 
+            class={
+              "node"
+              + (n.canSelectNodeWinner ? " can-select-winner" : "")
+              + (n.loser ? " loser-node" : "")
+              + (typeof n.node.entrantId === "number" ? " has-entrant" : " no-entrant")
+            }
+  
+            on:click={() => onClickNode(n.node)}
+  
+            transform={`translate(${n.left},${n.top})`}
           >
-            {tournament.entrants[n.node.entrantId]?.data || ""}
-          </text>
-        </g>
-      {/each}
-    </g>
-  </svg>
+            <g transform={`translate(${halfNodeWidth},${halfNodeHeight})`}>
+              <rect
+                fill="#fff"
+                height={nodeDims.h}
+                on:click={() => selectNodeWinner(n.node)}
+                stroke="#000"
+                stroke-width="1"
+                width={nodeDims.w}
+                x={-halfNodeWidth}
+                y={-halfNodeHeight}
+              />
+            </g>
+            <text
+              dy="0.35em"
+              on:click={() => selectNodeWinner(n.node)}
+              text-anchor="middle"
+              x={halfNodeWidth}
+              y={halfNodeHeight}
+            >
+              {tournament.entrants[n.node.entrantId]?.data || ""}
+            </text>
+          </g>
+        {/each}
+      </g>
+    </svg>
+  </div>
 
   <br/><br/>
 
@@ -190,17 +214,26 @@ import { saveEntrants } from './localStorage';
       placeholder="Ex: 🍕 Pizza"
       type="text"
     />
-    <button type="submit">Add</button>
+    <button type="submit" style="border:1px solid #777;">Add</button>
   </form>
 </div>
 
 <style>
   .tournament {
-    /* height: 100%; */
-    background-color: #717D7E;
-    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    background-color: #FEF9E7;
+    color: #555;
     text-align: center;
     padding: 1em;
+  }
+
+  .svg-container {
+    overflow: auto;
+    width: 100%;
   }
 
   .link {
@@ -210,11 +243,6 @@ import { saveEntrants } from './localStorage';
     opacity: 0.2;
   }
 
-
-
-  .node rect {
-    fill: #eee;
-  }
 
   .node.can-select-winner {
     cursor: pointer;
@@ -239,9 +267,9 @@ import { saveEntrants } from './localStorage';
   }
 
   @keyframes flash {
-    0% {fill: #eee;}
-    50% {fill: #A3E4D7;}
-    100% {fill: #eee;}
+    0% {fill: #fff;}
+    50% {fill: #D5F5E3;}
+    100% {fill: #fff;}
   }
   .node.has-entrant rect {
     animation-name: flash;
@@ -263,9 +291,10 @@ import { saveEntrants } from './localStorage';
   }
 
   .tournament-icon {
-    border: 2px solid #999;
-    border-radius: 50%;
-    background-color: white;
+    /* border: 1px solid #999; */
+    /* border-radius: 50%; */
+    /* background-color: white; */
+    background-color: transparent;
     width: 1.43em;
     height: 1.43em;
     font-size: 1em;
