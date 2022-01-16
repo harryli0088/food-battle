@@ -34,14 +34,21 @@
     const left = node.level * totalNodeWidth + nodeDims.l
     const top = node.row * levelHeightDivision + nodeDims.t + levelHeightDivision/2 - totalNodeHeight/2
 
+
+    const parent = tournament.nodes[node.parentId]
+    const winnerDecided = typeof node.entrantId==="number" && typeof parent?.entrantId==="number"
     return {
       canDeselectNodeWinner: tournament.canDeselectNodeWinner(node)===true,
       canSelectNodeWinner: tournament.canSelectNodeWinner(node)===true,
       left,
+      loser: winnerDecided && parent.entrantId !== node.entrantId,
       node,
       top,
+      winner: winnerDecided && parent.entrantId === node.entrantId,
     }
   })
+  
+  $: console.log("renderNodeData",renderNodeData)
 
   function deselectNodeWinner(node: NodeType) {
     if(tournament.canDeselectNodeWinner(node)) {
@@ -58,9 +65,17 @@
 
   $: halfNodeHeight = nodeDims.h / 2
   $: halfNodeWidth = nodeDims.w / 2
+
+  //TODO add entrant
+  //TODO remove entrant
 </script>
 
 <div class="tournament">
+  <div>
+    <h1>Food Tournament!</h1>
+    <p>Decide what to eat, one match at a time</p>
+  </div>
+
   <svg height={containerHeight} width={containerWidth}>
     <g>
       {#each renderNodeData as n}
@@ -69,13 +84,8 @@
             <path 
               class={
                 "link"
-                + (
-                  typeof childNodeData.node.entrantId==="number" && typeof n.node.entrantId==="number"
-                  ? (
-                    childNodeData.node.entrantId===n.node.entrantId ? " winner-link" : " loser-link"
-                  )
-                  : ""
-                )
+                + (childNodeData.winner ? " winner-link" : "")
+                + (childNodeData.loser ? " loser-link" : "")
               }
               d={`M${n.left},${n.top+halfNodeHeight} ${childNodeData.left + nodeDims.w},${childNodeData.top+halfNodeHeight}Z`}
               stroke="#000"
@@ -91,6 +101,7 @@
           class={
             "node"
             + (n.canSelectNodeWinner ? " can-select-winner" : "")
+            + (n.loser ? " loser-node" : "")
             + (typeof n.node.entrantId === "number" ? " has-entrant" : " no-entrant")
           }
 
@@ -139,6 +150,17 @@
       {/each}
     </g>
   </svg>
+
+  <form>
+    <label for="add-option"><b>Add Another Option</b></label>
+    <br/>
+    <input
+      id="add-option"
+      placeholder="Ex: Pizza"
+      type="text"
+    />
+    <button type="submit">Add</button>
+  </form>
 </div>
 
 <style>
@@ -147,17 +169,17 @@
     background-color: #717D7E;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-evenly;
+    flex-direction: column;
+    color: white;
+    text-align: center;
   }
 
   .link {
     transition: 0.5s;
   }
-  .link.winner-link {
-    stroke: #D5F5E3;
-  }
   .link.loser-link {
-    stroke: #555;
+    opacity: 0.2;
   }
 
 
@@ -182,6 +204,10 @@
   .node.can-select-winner:active rect {
     /* stroke-width: 0; */
     transform: scale(1);
+  }
+
+  .node.loser-node {
+    opacity: 0.2;
   }
 
   @keyframes flash {

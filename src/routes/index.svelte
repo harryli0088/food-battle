@@ -6,10 +6,16 @@
   import Tournament from '$lib/Tournament'
   import TournamentComponent from '$lib/Tournament.svelte'
   import shuffle from '$lib/shuffle'
+  import { onMount } from 'svelte';
   // import { faFilePdf } from '@fortawesome/free-solid-svg-icons'
   
-  const entrants = shuffle(["Pizza", "Pasta", "Sushi", "Viet", "Sando", "Mexican", "Burgers", "Chinese"])
-  const tourn = new Tournament(entrants)
+  //TODO save entrants in local storage
+  let entrants = ["Pizza", "Pasta", "Sushi", "Viet", "Sando", "Mexican", "Burgers", "Chinese"]
+  $: tourn = new Tournament(entrants)
+
+  onMount(() => {
+    entrants = shuffle(entrants)
+  })
 </script>
 
 <main>
