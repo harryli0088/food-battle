@@ -50,8 +50,6 @@
   #tournament-container {
     height: 100vh;
     background-color: #ddd;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    overflow: auto;
   }
 </style>

@@ -319,6 +319,8 @@ test("invalid deselectNodeWinner", () => {
   expect(() => {
     tourn.deselectNodeWinner(6) //invalid
   }).toThrowError("The selected node does not have an entrant")
+
+  //TODO test can't deselect original entrant
 })
 
 

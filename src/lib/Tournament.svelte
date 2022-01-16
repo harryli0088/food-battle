@@ -17,10 +17,7 @@
   }
 
   export let tournament: Tournament<string>
-  export let nodeDims: NodeDimensionsType = {t: 20, b: 20, l: 40, r: 40, h: 75, w: 100}
-
-  let height: number = 1000
-  let width: number = 1000
+  export let nodeDims: NodeDimensionsType = {t: 10, b: 10, l: 15, r: 15, h: 50, w: 100}
 
   $: totalNodeWidth = nodeDims.l + nodeDims.r + nodeDims.w //horizontal space that one node takes up, ie level width
   $: totalNodeHeight = nodeDims.t + nodeDims.b + nodeDims.h //vertical space that one node takes up
@@ -58,34 +55,69 @@
       tournament = tournament
     }
   }
+
+  $: halfNodeHeight = nodeDims.h / 2
+  $: halfNodeWidth = nodeDims.w / 2
 </script>
 
-<div class="tournament" bind:clientHeight={height} bind:clientWidth={width}>
-  <svg {height} {width}>
+<div class="tournament">
+  <svg height={containerHeight} width={containerWidth}>
+    <g>
+      {#each renderNodeData as n}
+        {#if n.node.childrenIds}
+          {#each Object.keys(n.node.childrenIds).map(id => renderNodeData[id]) as childNodeData}
+            <path 
+              class={
+                "link"
+                + (
+                  typeof childNodeData.node.entrantId==="number" && typeof n.node.entrantId==="number"
+                  ? (
+                    childNodeData.node.entrantId===n.node.entrantId ? " winner-link" : " loser-link"
+                  )
+                  : ""
+                )
+              }
+              d={`M${n.left},${n.top+halfNodeHeight} ${childNodeData.left + nodeDims.w},${childNodeData.top+halfNodeHeight}Z`}
+              stroke="#000"
+              stroke-width="2"
+            />
+          {/each}
+        {/if}
+      {/each}
+    </g>
     <g>
       {#each renderNodeData as n}
         <g 
           class={
             "node"
-            + (n.canSelectNodeWinner?" can-select-winner":"")
-            + (n.canDeselectNodeWinner?" can-deselect-winner":"")
+            + (n.canSelectNodeWinner ? " can-select-winner" : "")
+            + (typeof n.node.entrantId === "number" ? " has-entrant" : " no-entrant")
           }
 
           transform={`translate(${n.left},${n.top})`}
         >
-          <rect
-            fill="#eee"
-            height={nodeDims.h}
-            width={nodeDims.w}
-            x={0}
-            y={0}
-          />
-          <text x={nodeDims.w/2} y={nodeDims.h/2} text-anchor="middle" dy="0.35em">
+          <g transform={`translate(${halfNodeWidth},${halfNodeHeight})`}>
+            <rect
+              fill="#eee"
+              height={nodeDims.h}
+              on:click={() => selectNodeWinner(n.node)}
+              width={nodeDims.w}
+              x={-halfNodeWidth}
+              y={-halfNodeHeight}
+            />
+          </g>
+          <text
+            dy="0.35em"
+            on:click={() => selectNodeWinner(n.node)}
+            text-anchor="middle"
+            x={halfNodeWidth}
+            y={halfNodeHeight}
+          >
             {tournament.entrants[n.node.entrantId]?.data || ""}
           </text>
 
           {#if n.canDeselectNodeWinner}
-            <foreignObject x={- 15} y={nodeDims.h/2 - 15} height="30" width="30">
+            <foreignObject x={- 15} y={halfNodeHeight - 15} height="30" width="30">
               <div class="tournament-icon-container">
                 <button class="tournament-icon" on:click={() => deselectNodeWinner(n.node)}>
                   <Fa icon={faTimes}/>
@@ -94,15 +126,15 @@
             </foreignObject>
           {/if}
 
-          {#if n.canSelectNodeWinner}
-            <foreignObject x={nodeDims.w - 15} y={nodeDims.h/2 - 15} height="30" width="30">
+          <!-- {#if n.canSelectNodeWinner}
+            <foreignObject x={nodeDims.w - 15} y={halfNodeHeight - 15} height="30" width="30">
               <div class="tournament-icon-container">
                 <button class="tournament-icon" on:click={() => selectNodeWinner(n.node)}>
                   <Fa icon={faArrowRight}/>
                 </button>
               </div>
             </foreignObject>
-          {/if}
+          {/if} -->
         </g>
       {/each}
     </g>
@@ -112,12 +144,61 @@
 <style>
   .tournament {
     height: 100%;
-    width: 100%;
+    background-color: #717D7E;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  svg {
-    background-color: pink;
+  .link {
+    transition: 0.5s;
   }
+  .link.winner-link {
+    stroke: #D5F5E3;
+  }
+  .link.loser-link {
+    stroke: #555;
+  }
+
+
+
+  .node rect {
+    fill: #eee;
+  }
+
+  .node.can-select-winner {
+    cursor: pointer;
+    transition: 0.5s;
+  }
+  .node.can-select-winner rect {
+    /* stroke: #000;
+    stroke-width: 0; */
+    transition: 0.5s;
+  }
+  .node.can-select-winner:hover rect {
+    /* stroke-width: 2px; */
+    transform: scale(1.1);
+  }
+  .node.can-select-winner:active rect {
+    /* stroke-width: 0; */
+    transform: scale(1);
+  }
+
+  @keyframes flash {
+    0% {fill: #eee;}
+    50% {fill: #A3E4D7;}
+    100% {fill: #eee;}
+  }
+  .node.has-entrant rect {
+    animation-name: flash;
+    animation-duration: 0.5s;
+    animation-iteration-count: 1;
+  }
+
+  .node.no-entrant rect {
+    fill: #bbb;
+  }
+
 
   .tournament-icon-container {
     display: flex;
@@ -138,4 +219,5 @@
     padding: 0;
     text-align: center;
   }
+
 </style>
