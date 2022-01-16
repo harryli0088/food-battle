@@ -1,5 +1,5 @@
 {
-  "name": "svelte-kit-template",
+  "name": "food-battle",
   "version": "1.0.0",
   "scripts": {
     "dev": "svelte-kit dev",
