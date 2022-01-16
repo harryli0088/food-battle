@@ -105,7 +105,7 @@
 <div class="tournament">
   <div>
     <h1>{emoji} Food Battle {emoji}</h1>
-    <p>Decide what to eat, one match at a time!</p>
+    <p>Not sure what to eat? Make your decision, one match at a time!</p>
   </div>
 
   <br/><br/>
