@@ -1,7 +1,7 @@
 <script lang="ts">
   //https://kit.svelte.dev/docs#layouts
 	import '../app.css';
-import Blanchor from '$lib/Blanchor.svelte';
+  import Blanchor from '$lib/Blanchor.svelte';
 </script>
 
 <main>
@@ -11,7 +11,7 @@ import Blanchor from '$lib/Blanchor.svelte';
 <footer>
   <p>Tournament UI inspired by the <Blanchor href="https://stateofjs.com/">State of JS</Blanchor> survey</p>
   <p>Built using <Blanchor href="https://kit.svelte.dev/">Svelte Kit</Blanchor> and <Blanchor href="https://www.typescriptlang.org/">TypeScript</Blanchor></p>
-  <p>Github Repo: <Blanchor href="https://github.com/harryli0088/food-tournament">https://github.com/harryli0088/food-tournament</Blanchor></p>
+  <p>Github Repo: <Blanchor href="https://github.com/harryli0088/food-battle">https://github.com/harryli0088/food-battle</Blanchor></p>
   <p>Icons provided by Font Awesome: <Blanchor href="https://fontawesome.com/license">https://fontawesome.com/license</Blanchor></p>
 </footer>
 
