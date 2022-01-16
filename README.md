@@ -1,8 +1,10 @@
-# Svelte Kit Template
+# Food Battle
 
-My own Svelte Kit template!
+Not sure what to eat? Make your decision, one match at a time!
 
-https://harryli0088.github.io/svelte-kit-template/
+https://harryli0088.github.io/food-battle/
+
+![screenshot](./static/screenshot.png)
 
 Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte);
 
