@@ -6,6 +6,7 @@
   import type Tournament from '$lib/Tournament'
   import { NodeType, powerRoundUp } from '$lib/Tournament';
   import { faArrowRight, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { saveEntrants } from './localStorage';
 
   type NodeDimensionsType = {
     t: number, //top margin
@@ -17,7 +18,9 @@
   }
 
   export let tournament: Tournament<string>
-  export let nodeDims: NodeDimensionsType = {t: 10, b: 10, l: 15, r: 15, h: 50, w: 100}
+  export let nodeDims: NodeDimensionsType = {t: 10, b: 10, l: 30, r: 5, h: 50, w: 100}
+
+  let addEntrant:string
 
   $: totalNodeWidth = nodeDims.l + nodeDims.r + nodeDims.w //horizontal space that one node takes up, ie level width
   $: totalNodeHeight = nodeDims.t + nodeDims.b + nodeDims.h //vertical space that one node takes up
@@ -66,8 +69,19 @@
   $: halfNodeHeight = nodeDims.h / 2
   $: halfNodeWidth = nodeDims.w / 2
 
-  //TODO add entrant
-  //TODO remove entrant
+  function onSubmitAddEntrant(e: Event) {
+    e.preventDefault() //prevent default page refresh
+    tournament.addEntrant(addEntrant.trim()) //add the entrant
+    saveEntrants(tournament.getEntrantsData()) //update local storage
+    tournament = tournament //update svelte
+  }
+  
+  
+  function removeEntrant(node: NodeType) {
+    tournament.removeEntrant(node.entrantId) //remove the entrant
+    saveEntrants(tournament.getEntrantsData()) //update local storage
+    tournament = tournament //update svelte
+  }
 </script>
 
 <div class="tournament">
@@ -75,6 +89,8 @@
     <h1>Food Tournament!</h1>
     <p>Decide what to eat, one match at a time</p>
   </div>
+
+  <br/><br/>
 
   <svg height={containerHeight} width={containerWidth}>
     <g>
@@ -97,6 +113,38 @@
     </g>
     <g>
       {#each renderNodeData as n}
+        <g transform={`translate(${n.left},${n.top})`}>
+          {#if n.node.isOriginalEntrant}
+            <foreignObject x={- 30} y={halfNodeHeight - 15} height="30" width="30">
+              <div class="tournament-icon-container">
+                <button class="tournament-icon" on:click={() => removeEntrant(n.node)}>
+                  <Fa icon={faTimes}/>
+                </button>
+              </div>
+            </foreignObject>
+          {/if}
+
+          <!-- {#if n.canDeselectNodeWinner}
+            <foreignObject x={- 15} y={halfNodeHeight - 15} height="30" width="30">
+              <div class="tournament-icon-container">
+                <button class="tournament-icon" on:click={() => deselectNodeWinner(n.node)}>
+                  <Fa icon={faTimes}/>
+                </button>
+              </div>
+            </foreignObject>
+          {/if} -->
+
+          <!-- {#if n.canSelectNodeWinner}
+            <foreignObject x={nodeDims.w - 15} y={halfNodeHeight - 15} height="30" width="30">
+              <div class="tournament-icon-container">
+                <button class="tournament-icon" on:click={() => selectNodeWinner(n.node)}>
+                  <Fa icon={faArrowRight}/>
+                </button>
+              </div>
+            </foreignObject>
+          {/if} -->
+        </g>
+
         <g 
           class={
             "node"
@@ -126,37 +174,20 @@
           >
             {tournament.entrants[n.node.entrantId]?.data || ""}
           </text>
-
-          {#if n.canDeselectNodeWinner}
-            <foreignObject x={- 15} y={halfNodeHeight - 15} height="30" width="30">
-              <div class="tournament-icon-container">
-                <button class="tournament-icon" on:click={() => deselectNodeWinner(n.node)}>
-                  <Fa icon={faTimes}/>
-                </button>
-              </div>
-            </foreignObject>
-          {/if}
-
-          <!-- {#if n.canSelectNodeWinner}
-            <foreignObject x={nodeDims.w - 15} y={halfNodeHeight - 15} height="30" width="30">
-              <div class="tournament-icon-container">
-                <button class="tournament-icon" on:click={() => selectNodeWinner(n.node)}>
-                  <Fa icon={faArrowRight}/>
-                </button>
-              </div>
-            </foreignObject>
-          {/if} -->
         </g>
       {/each}
     </g>
   </svg>
 
-  <form>
+  <br/><br/>
+
+  <form on:submit={onSubmitAddEntrant}>
     <label for="add-option"><b>Add Another Option</b></label>
     <br/>
     <input
+      bind:value={addEntrant}
       id="add-option"
-      placeholder="Ex: Pizza"
+      placeholder="Ex: 🍕 Pizza"
       type="text"
     />
     <button type="submit">Add</button>
@@ -165,14 +196,11 @@
 
 <style>
   .tournament {
-    height: 100%;
+    /* height: 100%; */
     background-color: #717D7E;
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    flex-direction: column;
     color: white;
     text-align: center;
+    padding: 1em;
   }
 
   .link {
@@ -207,7 +235,7 @@
   }
 
   .node.loser-node {
-    opacity: 0.2;
+    opacity: 0.5;
   }
 
   @keyframes flash {
@@ -238,8 +266,8 @@
     border: 2px solid #999;
     border-radius: 50%;
     background-color: white;
-    width: 1.5em;
-    height: 1.5em;
+    width: 1.43em;
+    height: 1.43em;
     font-size: 1em;
     margin: 0;
     padding: 0;

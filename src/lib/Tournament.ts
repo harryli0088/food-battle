@@ -49,6 +49,8 @@ export default class Tournament<EntrantDataType> {
     this.rebuildTournament() //rebuild tournament
   }
 
+  getEntrantsData = () => this.entrants.map(e => e.data)
+
   makeEntrants = (entrantsData: EntrantDataType[]) => (
     this.entrants = entrantsData.map((data, i) => ({
       data,
